@@ -21,40 +21,71 @@
 
 defined('ABSPATH') or die();
 
-$plugin_file = __FILE__;
-
-require_once plugin_dir_path($plugin_file) . 'inc/functions.php';
-
-
-// Définition des constantes
-$abrPlugin = varEntete('Text Domain min');
-$namePlugin = VarEntete('Text Domain');
-$defaultSize = array('300x300', '600x600', '1024x1024');
-
-// Tableau associatif pour regrouper les constantes
-$isc_constants = array(
-    'NAME' => 'scribo-smtp',
-    'VERSION' => '1.0.17',
-    'CSS_VERSION' => '1.1.20',
-    'JS_VERSION' => '1.1.07',
-    'DIR_PATH' => plugin_dir_path($plugin_file),
-    'URL_PATH' => plugin_dir_url($plugin_file),
-    'INC_PATH' => 'inc',
-    'ADMIN_PATH' => 'admin',
-    'ASSETS_PATH' => 'assets'
-);
-
-CallConstante($isc_constants);
-
-// Inclusion des fichiers nécessaires
-// RequireFile('URI_INC', '/class_functions.php');
+// Vérifie si la classe est déjà définie
+if (!class_exists('ScriboInitChecker')) {
+    // Chemin vers le fichier de la classe
+    require_once plugin_dir_path(__FILE__) . 'inc/scriboInitChecker.php';
+}
+// Instanciation de la classe pour que les hooks soient actifs
+new ScriboInitChecker(__FILE__);
 
 
 
-// Chargement des fichiers d'admin si dans l'interface admin
-if (is_admin()) {
-    RequireFile('URI_ADMIN', '/inc/functions.php');
-    RequireFile('URI_ADMIN', '/admin.php');
-} else {
-    RequireFile('URI_DIR', '/load.php');
+add_action('plugins_loaded', 'load_other_plugin_before_mine', 1);
+
+function load_other_plugin_before_mine()
+{
+
+    if (!class_exists('ScriboInit')) {
+        // Charger l'autre plugin manuellement
+        include_once(WP_PLUGIN_DIR . '/scribo-init/scribo-init.php');
+    }
+
+
+    // if (class_exists('ScriboInit')) {
+
+    // DEBUG:
+    // error_log("Plugin file ISC : " . __FILE__);
+    // Utiliser la classe
+    $scribo_init = new ScriboInit(__FILE__);
+
+
+    $scribo_init->DefineConstant('scribo_init', $scribo_init);
+
+    // Définition des constantes
+    $scribo_init->DefineConstant('Plugin_abr', $scribo_init->VarEntete('Text Domain min'));
+    $scribo_init->DefineConstant('Plugin_name', $scribo_init->VarEntete('Text Domain'));
+    $scribo_init->DefineConstant('default_Size', array('300x300', '600x600', '1024x1024'));
+    $scribo_init->DefineConstant('plugin_file', __FILE__);
+
+    // Exemple d'utilisation
+    try {
+        $scribo_init->CallConstante([
+            'NAME' => 'scribo-smtp',
+            'VERSION' => '1.0.17',
+            'CSS_VERSION' => '1.1.20',
+            'JS_VERSION' => '1.1.07',
+            'DIR_PATH' => plugin_dir_path(__FILE__),
+            'URL_PATH' => plugin_dir_url(__FILE__),
+            'INC_PATH' => 'inc',
+            'ADMIN_PATH' => 'admin',
+            'ASSETS_PATH' => 'assets',
+        ]);
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }
+
+    // Inclusion des fichiers nécessaires
+    // $scribo_init->RequireFile('URI_INC', '/class_functions.php');
+
+
+
+    // Chargement des fichiers d'admin si dans l'interface admin
+    if (is_admin()) {
+        $scribo_init->RequireFile('URI_ADMIN', '/inc/isc_settings.php');
+        $scribo_init->RequireFile('URI_ADMIN', '/admin.php');
+        // } else {
+        $scribo_init->RequireFile('URI_DIR', '/load.php');
+    }
+    // }
 }

@@ -34,7 +34,7 @@ function isc_render_plugin_page()
 
 function isc_settings_register()
 {
-    global $defaultSize, $namePlugin;
+    global $scribo_init;
     // register_setting('settings_fields', 'settings_field', 'settings_fields_validate');
     register_setting(
         'settings_fields',
@@ -42,7 +42,7 @@ function isc_settings_register()
         [
             'type' => 'array',
             'sanitize_callback' => 'sanitize_image_sizes',
-            'default' => $defaultSize
+            'default' => $scribo_init->DefineConstant('default_Size')
         ]
     );
     add_settings_section(
@@ -53,7 +53,7 @@ function isc_settings_register()
     );
     add_settings_field(
         'settings_field_introduction',
-        __('Set different image sizes', $namePlugin),
+        __('Set different image sizes', $scribo_init->DefineConstant('name_Plugin')),
         'isc_settings_field_introduction_output',
         'settings_section',
         'settings_section'
@@ -70,9 +70,9 @@ function isc_settings_register()
 
 function isc_settings_field_introduction_output()
 {
-    global $defaultSize;
+    global $scribo_init;
     // Récupérer les tailles enregistrées ou définir des tailles par défaut
-    $image_sizes = get_option('isc_image_sizes', $defaultSize);
+    $image_sizes = get_option('isc_image_sizes', $scribo_init->DefineConstant('default_Size'));
 ?>
     <div id="image-sizes-container">
         <?php
